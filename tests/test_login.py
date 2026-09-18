@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from pages.login_page import LoginPage
 
@@ -25,6 +26,7 @@ def test_login(navegador,usuario,contrasena,resultado_esperado):
             f" Se esperaba login exitoso. URL actual: {navegador.current_url}"
         )
     else:
+        os.makedirs("imagenes", exist_ok=True)
         navegador.save_screenshot(f"imagenes/fallo_{usuario}.png")
         assert "secure" not in  navegador.current_url,(
             f"No se esperaba login exitoso. pero redirigio a :{navegador.current_url}"
