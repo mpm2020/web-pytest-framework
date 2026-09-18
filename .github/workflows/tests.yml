@@ -29,7 +29,7 @@ jobs:
       - name: Correr los tests
         run: |
           pytest -v --html=reportes/reporte.html --self-contained-html
-        continue-on-error: false
+        continue-on-error: true   # <- clave: sin esto, si el test falla, el workflow corta acá y nunca llega al paso del mail
 
       # Sube el reporte y las capturas de fallo como artefacto descargable,
       # incluso si los tests fallaron (para poder revisarlos).
@@ -42,3 +42,20 @@ jobs:
             reportes/
             imagenes/
           retention-days: 15
+
+      - name: Enviar reporte por mail
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Resultado de tests - ${{ job.status }} - ${{ github.repository }}"
+          to: equipo@empresa.com
+          from: CI Bot
+          body: |
+            La corrida de tests en ${{ github.repository }} (rama ${{ github.ref_name }}) terminó con estado: ${{ job.status }}.
+            Commit: ${{ github.sha }}
+            Ver detalle completo en: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          attachments: reportes/reporte.html
