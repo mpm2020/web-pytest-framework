@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # permite correrlo a mano desde la pestaña Actions
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Correr los tests
+        run: |
+          pytest -v --html=reportes/reporte.html --self-contained-html
+        continue-on-error: false
+
+      # Sube el reporte y las capturas de fallo como artefacto descargable,
+      # incluso si los tests fallaron (para poder revisarlos).
+      - name: Subir reporte y capturas de pantalla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-tests
+          path: |
+            reportes/
+            imagenes/
+          retention-days: 15
